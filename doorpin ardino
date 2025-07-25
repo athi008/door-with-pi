@@ -1,0 +1,65 @@
+#include <Keypad.h>
+#include <LiquidCrystal.h>
+#include <Servo.h>
+
+// Initialize LCD (RS, EN, D4, D5, D6, D7)
+LiquidCrystal lcd(A0, A1, A2, A3, A4, A5);
+
+// Initialize Servo
+Servo myservo;
+
+// Define keypad layout
+const byte ROWS = 4;
+const byte COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+byte rowPins[ROWS] = {6, 7, 8, 9};    // Connect to R1-R4
+byte colPins[COLS] = {10, 11, 12, 13}; // Connect to C1-C4
+
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+// Password settings
+String password = "1234";
+String input = "";
+
+void setup() {
+  lcd.begin(16, 2);
+  myservo.attach(2);  // Servo connected to D2
+  myservo.write(0);   // Locked position
+  lcd.print("Enter Password:");
+}
+
+void loop() {
+  char key = keypad.getKey();
+  if (key) {
+    lcd.setCursor(0, 1);
+    if (key == '#') {
+      if (input == password) {
+        lcd.clear();
+        lcd.print("Access Granted");
+        myservo.write(90); // Unlock
+        delay(2000);
+      } else {
+        lcd.clear();
+        lcd.print("Access Denied");
+        myservo.write(0); // Keep locked
+        delay(2000);
+      }
+      lcd.clear();
+      lcd.print("Enter Password:");
+      input = ""; // reset input
+    } else if (key == '*') {
+      input = ""; // clear input
+      lcd.setCursor(0, 1);
+      lcd.print("Cleared         ");
+    } else {
+      input += key;
+      lcd.print("*"); // hide with *
+    }
+  }
+}
